@@ -10,8 +10,6 @@ $output=results.txt
 
 foreach($_ in $input) {
 
-
-
 $arrline= $_.split(",")
 $group= $_.[0]
 $getmembervar=(Get-DistributionGroupMember -identity $group[0] ).PrimarySTMPAddress
