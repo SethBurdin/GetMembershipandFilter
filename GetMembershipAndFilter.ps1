@@ -1,16 +1,31 @@
+$List=$null
+$group=$null
+$getmembervar=$null
+$filteredresults=$null
+
 [System.Collections.ArrayList]$List = @()
 $input= get-content ingestion.csv
 $output=results.txt
 
 
+foreach($_ in $input) {
 
 
-foreach($_ in $input)
-arrline= split ","
-$group= $_.
-$getmembervar=(Get-DistributionGroupMember -identity $_.ID).PrimarySTMPAddress
-$List.Add(Group)
+
+$arrline= $_.split(",")
+$group= $_.[0]
+$getmembervar=(Get-DistributionGroupMember -identity $group[0] ).PrimarySTMPAddress
+$List.Add($group)
 $filteredresults= $getmembervar | where {_.PrimarySTMPAddress -match "@filter1" -or "@filter2"}
 $List.Add($filteredresults)
 
-$List join ","
+##variable sanitation 
+$group=$null
+$filteredresults=$null
+
+
+$List -join "," | tee-object -filepath $output
+
+}
+
+write-output $List | fl
