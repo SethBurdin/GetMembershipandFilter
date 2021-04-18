@@ -1,43 +1,62 @@
+$filter1="taco"
+$filter2="m@"
+
+
+
 $List=$null
-#$group=$null
-$getmembervar=$null
+
+$GetMemb=$null
+
 $filteredresults=$null
-
-[System.Collections.ArrayList]$List = @(
-                                        Group = $List[0]
-                                        AllMembers = @($List[1] | Out-String).Trim() 
-                                        FilteredResult = @($List[2]  | Out-String).Trim()  
-                                        )
-
-$output="results.txt"
+$Report=$null
 
 
- foreach($_ in get-content ingestion.csv) {
-write-output $_
+[System.Collections.ArrayList]$List = @()
+
+$output="Hopethishelps.csv"
+
+
+foreach($_ in get-content ingestion.csv) {
+Write-Progress -Activity "Searching in Group $_"
+
 <#
 $arrline= $_.split(",")
 $group= $arrline[0]
 #>
-
-$getmembervar=(Get-DistributionGroupMember -identity $_ ).PrimarySmtpAddress
 $List.Add($_)
-$filteredresults=$getmembervar  # | where {_.PrimarySmtpAddress -match "@filter1" -or "@filter2"}
+$GetMemb=(Get-DistributionGroupMember -identity $_ ).PrimarySmtpAddress
+Write-Progress -Activity "Applying the Filters for $_"
+#write-output ($GetMemb | select-String -Pattern "$filter1" )
+$filteredresults=$GetMemb | select-String -List $filter1, $filter2
+
+#{$_.PrimarySmtpAddress -like "$filter1"-or "$filter2"} 
 $List.Add($filteredresults)
-$List.Add($getmembervar)
+$List.Add($GetMemb)
 
-<##variable sanitation 
-#$group=$null
-$filteredresults=$null
-#>
 
-<#
-write-output "$List.$_" + "$List.$getmembervar" + "$List.$filteredresults"  
-"$List.$_" + "$List.$getmembervar" + "$List.$filteredresults"  -join "," | out-file -filepath $output
+
+<# Playing around with it
+write-output "$List.$_" + "$List.$GetMemb" + "$List.$filteredresults"  
+"$List.$_" + "$List.$GetMemb" + "$List.$filteredresults"  -join "," | out-file -filepath $output
 $List[0] + $List[1] + $List[2]  -join "," | out-file -filepath longshot.txt
 -join "," 
 #>
-$List | export-csv  test2.csv -NoTypeInformation
-$List -join ","  | out-file -filepath $output
+
+$Report = [PSCustomObject]@{
+    Group     = $List[0]
+    Members = $GetMemb -join ","
+    TargetUserBase    = $filteredresults -join ","
+}
+##variable sanitation 
+$List[0]=$null
+$filteredresults=$null
+$GetMemb=$null
+
+
+#>
+
+$Report  | export-csv $output -notype
+
 
 }
-write-output $List | fl
+write-output $Report 
